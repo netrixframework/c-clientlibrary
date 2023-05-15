@@ -2,6 +2,15 @@
 #include "ds.h"
 #include "mongoose.h"
 
+http_reply* http_create_reply(void) {
+    http_reply* reply = malloc(sizeof(http_reply));
+    return reply;
+}
+
+void http_free_reply(http_reply* r) {
+    free(r);
+}
+
 http_server* http_create_server(char* listen_addr, void* fn_data) {
     http_server* server = malloc(sizeof(http_server));
     server->listen_addr = listen_addr;
@@ -36,17 +45,17 @@ void connection_handler(struct mg_connection *c, int ev, void *ev_data, void *fn
         http_reply* reply = handler(http_msg, server->fn_data);
         mg_http_reply(c, reply->status_code, reply->headers, reply->body);
 
-        free(reply);
+        http_free_reply(reply);
     }
     (void) fn_data;
 }
 
 http_reply* *default_handler(struct mg_http_message* message, void* fn_data) {
-    http_reply reply;
-    reply.body = "{\"msg\":\"Not found\"}";
-    reply.status_code = 404;
-    reply.headers = "Content-Type: application/json\r\n";
-    return &reply;
+    http_reply* reply = http_create_reply();
+    reply->body = "{\"msg\":\"Not found\"}";
+    reply->status_code = 404;
+    reply->headers = "Content-Type: application/json\r\n";
+    return reply;
 }
 
 void http_add_handler(http_server* s, const char* uri, http_handler handler) {

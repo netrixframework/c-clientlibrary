@@ -57,12 +57,23 @@ void* map_get(map* m, const char* key) {
 }
 
 int map_size(map* m) {
+    if(m == NULL) {
+        return 0;
+    }
     return deque_size(m->elems);
 }
 
 void free_map(map* m) {
     free(m);
 }
+
+deque_elem* map_iterator(map* m) {
+    if(m == NULL) {
+        return NULL;
+    }
+    return m->elems->head;
+}
+
 
 deque* create_deque(void) {
     deque* new_deque = malloc(sizeof(deque));
@@ -160,6 +171,71 @@ void* deque_get(deque* d, int pos) {
     return elem->elem;
 }
 
+int deque_size(deque* d) {
+    if (d == NULL) {
+        return 0;
+    }
+    return d->size;
+}
+
 void free_deque(deque* d) {
     free(d);
+}
+
+deque_elem* deque_iterator(deque* d) {
+    if (d == NULL) {
+        return NULL;
+    }
+    return d->head;
+}
+
+
+string* create_string(char* a) {
+    string* s = malloc(sizeof(string));
+    s->len = 0;
+    s->ptr = malloc(s->len+1);
+    s->ptr[s->len] = '\0';
+    if (a != NULL && strlen(a) != 0) {
+        s = string_append(s, a);
+    }
+    return s;
+}
+
+string* string_append(string* s, char* str) {
+    if (s == NULL) {
+        s = create_string(NULL);
+    }
+    if (str == NULL || strlen(str) == 0) {
+        return s;
+    }
+    size_t new_len = s->len + strlen(str);
+    s->ptr = realloc(s->ptr, new_len+1);
+    memcpy(s->ptr+s->len, str, strlen(str));
+    s->ptr[new_len] = '\0';
+    s->len = new_len;
+    return s;
+}
+
+string* string_appendn(string* s, char* str, size_t n) {
+    char* s_cpy = malloc(n);
+    strncpy(s_cpy, str, n);
+    s = string_append(s, s_cpy);
+    free(s_cpy);
+    return s;
+}
+
+size_t string_len(string* s) {
+    return s->len;
+}
+
+char* string_str(string* s) {
+    char* resp = malloc(s->len+1);
+    strncpy(resp, s->ptr, s->len);
+    resp[s->len+1] = '\0';
+    return resp;
+}
+
+void free_string(string* s) {
+    free(s->ptr);
+    free(s);
 }

@@ -12,6 +12,9 @@ typedef struct http_reply {
     char* body;
 } http_reply;
 
+http_reply* http_create_reply(void);
+void http_free_reply(http_reply*);
+
 typedef http_reply* (*http_handler)(struct mg_http_message*, void* fn_data);
 
 typedef struct http_server {

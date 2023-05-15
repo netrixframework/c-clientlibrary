@@ -1,20 +1,27 @@
 #ifndef HTTP_CLIENT_H_
 #define HTTP_CLIENT_H_
 
-#include "mongoose.h"
+#include "ds.h"
 
-typedef struct http_post_request {
+typedef struct http_request {
     char* body;
-    char* headers;
+    char* method;
+    map* headers;
     char* url;
-} http_post_request;
+} http_request;
 
-typedef struct http_post_response {
-    int error_code;
+typedef struct http_response {
+    long error_code;
     char* error;
-    struct mg_http_message* resonse_msg;
+    char* response_body;
 } http_response;
 
-http_response* http_post(http_post_request*);
+http_response* http_create_response(void);
+void http_free_response(http_response*);
+
+http_response* http_post(char* url, char* body, map* headers);
+http_response* http_get(char* url, map* headers);
+
+http_response* http_do(http_request*);
 
 #endif

@@ -9,9 +9,9 @@
 typedef void (*directive_handler)(char*);
 
 typedef struct client_config {
-    char* id;
-    char* netrix_addr;
-    char* listen_addr;
+    const char* id;
+    const char* netrix_addr;
+    const char* listen_addr;
     map* info;
     directive_handler start_directive_handler;
     directive_handler stop_directive_handler;
@@ -22,12 +22,13 @@ typedef struct netrix_client {
     client_config config;
     deque* message_queue;
     http_server* http_server;
+    map* message_counter;
 } netrix_client;
 
 netrix_client* create_client(client_config);
-
-int send_message(netrix_client*, netrix_message*);
-int sent_event(netrix_client*, netrix_event*);
+long run_client(netrix_client*);
+long send_message(netrix_client*, netrix_message*);
+long sent_event(netrix_client*, netrix_event*);
 bool have_message(netrix_client*);
 netrix_message* receive_message(netrix_client*);
 void free_client(netrix_client*);

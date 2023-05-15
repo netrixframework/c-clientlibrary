@@ -21,6 +21,8 @@ void* map_get(map*, const char*);
 int map_size(map*);
 void free_map(map*);
 
+deque_elem* map_iterator(map*);
+
 typedef struct deque_elem {
     void* elem;
     deque_elem* next;
@@ -31,6 +33,7 @@ typedef struct deque {
     deque_elem* head;
     deque_elem* tail;
     int size;
+    
 } deque;
 
 deque* create_deque(void);
@@ -43,5 +46,19 @@ void deque_insert(deque*, void*, int);
 int deque_size(deque*);
 void* deque_get(deque*, int);
 void free_deque(deque*);
+
+deque_elem* deque_iterator(deque*);
+
+typedef struct string {
+  char *ptr;
+  size_t len;
+} string;
+
+string* create_string(char*);
+string* string_append(string*, char*);
+string* string_appendn(string*, char*, size_t n);
+char* string_str(string*);
+size_t string_len(string*);
+void free_string(string*);
 
 #endif
