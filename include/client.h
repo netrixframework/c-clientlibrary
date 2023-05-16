@@ -4,6 +4,7 @@
 
 #include "netrix_types.h"
 #include "ds.h"
+#include "http_server.h"
 #include <stdbool.h>
 
 typedef void (*directive_handler)(char*);

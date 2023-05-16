@@ -20,9 +20,7 @@ char* serialize_message(netrix_message* message) {
     json_object_object_add(obj, "type", json_object_new_string(message->type));
     json_object_object_add(obj, "id", json_object_new_string(message->id));
 
-    char* serialized = json_object_to_json_string(obj);
-    char* result = malloc(strlen(serialized));
-    strncpy(result, serialized, strlen(serialized));
+    char* result = strdup(json_object_to_json_string(obj));
 
     json_object_put(obj);
 
@@ -35,7 +33,7 @@ netrix_message* deserialize_message(char* message_s) {
     if (obj == NULL) {
         return NULL;
     }
-    char* from, to, data, type, id;
+    char *from, *to, *data, *type, *id;
     json_object* j_from = json_object_object_get(obj, "from");
     json_object* j_to = json_object_object_get(obj, "to");
     json_object* j_data = json_object_object_get(obj, "data");
@@ -86,9 +84,7 @@ char* serialize_event(netrix_event* event) {
     }
     json_object_object_add(obj, "params", params_obj);
 
-    char* serialized = json_object_to_json_string(obj);
-    char* result = malloc(strlen(serialized));
-    strncpy(result, serialized, strlen(serialized));
+    char* result = strdup(json_object_to_json_string(obj));
 
     json_object_put(obj);
 

@@ -11,7 +11,11 @@ void http_free_reply(http_reply* r) {
     free(r);
 }
 
-http_server* http_create_server(char* listen_addr, void* fn_data) {
+void mg_log_fn(char ch, void* param) {
+    return;
+}
+
+http_server* http_create_server(const char* listen_addr, void* fn_data) {
     http_server* server = malloc(sizeof(http_server));
     server->listen_addr = listen_addr;
     server->handlers = create_map();
@@ -23,6 +27,14 @@ http_server* http_create_server(char* listen_addr, void* fn_data) {
     mg_log_set_fn(mg_log_fn, NULL);
 
     return server;
+}
+
+http_reply* default_handler(struct mg_http_message* message, void* fn_data) {
+    http_reply* reply = http_create_reply();
+    reply->body = "{\"msg\":\"Not found\"}";
+    reply->status_code = 404;
+    reply->headers = "Content-Type: application/json\r\n";
+    return reply;
 }
 
 http_handler http_get_handler(http_server* server, const char* uri) {
@@ -50,20 +62,8 @@ void connection_handler(struct mg_connection *c, int ev, void *ev_data, void *fn
     (void) fn_data;
 }
 
-http_reply* *default_handler(struct mg_http_message* message, void* fn_data) {
-    http_reply* reply = http_create_reply();
-    reply->body = "{\"msg\":\"Not found\"}";
-    reply->status_code = 404;
-    reply->headers = "Content-Type: application/json\r\n";
-    return reply;
-}
-
 void http_add_handler(http_server* s, const char* uri, http_handler handler) {
     map_add(s->handlers, uri, handler);
-}
-
-void mg_log_fn(char ch, void* param) {
-    return;
 }
 
 void http_listen(http_server* s) {

@@ -32,6 +32,15 @@ http_response* http_get(char* url, map* headers) {
     request.method = "GET";
     request.url = url;
     request.headers = headers;
+
+    return http_do(&request);
+}
+
+static size_t request_cb(char* ptr, size_t size, size_t nemb, string* resp) {
+    // Send the request and update the response
+    size_t real_size = size*nemb;
+    string_appendn(resp, ptr, real_size);
+    return real_size;
 }
 
 http_response* http_do(http_request* req) {
@@ -92,11 +101,4 @@ http_response* http_do(http_request* req) {
     }
     curl_global_cleanup();
     return resp;
-}
-
-static size_t request_cb(char* ptr, size_t size, size_t nemb, string* resp) {
-    // Send the request and update the response
-    size_t real_size = size*nemb;
-    string_appendn(resp, ptr, real_size);
-    return real_size;
 }

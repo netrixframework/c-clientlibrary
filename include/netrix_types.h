@@ -1,7 +1,7 @@
 #ifndef NETRIX_TYPES_H_
 #define NETRIX_TYPES_H_
 
-#include "ds.h";
+#include "ds.h"
 
 typedef struct netrix_message {
     char* from;

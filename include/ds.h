@@ -2,31 +2,12 @@
 #define NETRIX_DS_H_
 
 #include <stdbool.h>
-
-typedef struct map_elem {
-    const char* key;
-    void* value;
-} map_elem;
-
-typedef struct map {
-    deque* elems;
-} map;
-
-map* create_map(void);
-void map_add(map*, const char*, void*);
-void* map_remove(map*, const char*);
-int map_exists_index(map*, const char*);
-bool map_exists(map*, const char*);
-void* map_get(map*, const char*);
-int map_size(map*);
-void free_map(map*);
-
-deque_elem* map_iterator(map*);
+#include <stdlib.h>
 
 typedef struct deque_elem {
     void* elem;
-    deque_elem* next;
-    deque_elem* prev;
+    struct deque_elem* next;
+    struct deque_elem* prev;
 } deque_elem;
 
 typedef struct deque {
@@ -48,6 +29,26 @@ void* deque_get(deque*, int);
 void free_deque(deque*);
 
 deque_elem* deque_iterator(deque*);
+
+typedef struct map_elem {
+    const char* key;
+    void* value;
+} map_elem;
+
+typedef struct map {
+    deque* elems;
+} map;
+
+map* create_map(void);
+void map_add(map*, const char*, void*);
+void* map_remove(map*, const char*);
+int map_exists_index(map*, const char*);
+bool map_exists(map*, const char*);
+void* map_get(map*, const char*);
+int map_size(map*);
+void free_map(map*);
+
+deque_elem* map_iterator(map*);
 
 typedef struct string {
   char *ptr;

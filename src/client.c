@@ -3,6 +3,17 @@
 #include "http_server.h"
 #include <string.h>
 
+
+http_reply* handle_message(struct mg_http_message* http_message, void* fn_data) {
+    // TODO: add message to the message queue
+    return NULL;
+}
+
+http_reply* handle_directive(struct mg_http_message* http_message, void* fn_data) {
+    // TODO: check if handlers are not null and invoke the right handler
+    return NULL;
+}
+
 netrix_client* create_client(client_config config) {
     netrix_client* new_client = malloc(sizeof(netrix_client));
     new_client->config = config;
@@ -30,8 +41,7 @@ char* get_message_id(netrix_client* c, char* from, char* to) {
         map_add(c->message_counter, string_str(key), 0);
     }
 
-    void* c = map_get(c->message_counter, string_str(key));
-    int count = (int) c;
+    int count = (int) map_get(c->message_counter, string_str(key));
     map_add(c->message_counter, string_str(key), (void*) count+1);
 
     char count_s[3];
@@ -75,7 +85,7 @@ long sent_event(netrix_client* c, netrix_event* event) {
     map* headers = create_map();
     map_add(headers, "Content-Type", "application/json");
 
-    http_response* response = http_post(addr, serialize_event(event), headers);
+    http_response* response = http_post(string_str(addr), serialize_event(event), headers);
 
     free_string(addr);
 
@@ -99,14 +109,4 @@ void free_client(netrix_client* c) {
     free_map(c->message_counter);
     http_free_server(c->http_server);
     free(c);
-}
-
-http_reply* handle_message(struct mg_http_message* http_message, void* fn_data) {
-    // TODO: add message to the message queue
-    return NULL;
-}
-
-http_reply* handle_directive(struct mg_http_message* http_message, void* fn_data) {
-    // TODO: check if handlers are not null and invoke the right handler
-    return NULL;
 }
