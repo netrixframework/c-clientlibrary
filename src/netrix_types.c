@@ -3,7 +3,7 @@
 #include <string.h>
 #include <json-c/json.h>
 
-netrix_message* create_message(char* to, char* data, char* type) {
+netrix_message* netrix_create_message(char* to, char* data, char* type) {
     netrix_message* new_message = malloc(sizeof(netrix_message));
     new_message->to = to;
     new_message->data = data;
@@ -11,7 +11,7 @@ netrix_message* create_message(char* to, char* data, char* type) {
     return new_message;
 }
 
-char* serialize_message(netrix_message* message) {
+char* netrix_serialize_message(netrix_message* message) {
     json_object* obj = json_object_new_object();
 
     json_object_object_add(obj, "from", json_object_new_string(message->from));
@@ -27,7 +27,7 @@ char* serialize_message(netrix_message* message) {
     return result;
 }
 
-netrix_message* deserialize_message(char* message_s) {
+netrix_message* netrix_deserialize_message(char* message_s) {
     // TODO: Need to do error handling when parsing
     json_object* obj = json_tokener_parse(message_s);
     if (obj == NULL) {
@@ -48,18 +48,18 @@ netrix_message* deserialize_message(char* message_s) {
 
     json_object_put(obj);
 
-    netrix_message* message = create_message(to, data, type);
+    netrix_message* message = netrix_create_message(to, data, type);
     message->from = from;
     message->id = id;
 
     return message;
 }
 
-void free_message(netrix_message* message) {
+void netrix_free_message(netrix_message* message) {
     free(message);
 }
 
-netrix_event* create_event(char* type, map* params, long timestamp) {
+netrix_event* netrix_create_event(char* type, netirx_map* params, long timestamp) {
     netrix_event* new_event = malloc(sizeof(netrix_event));
     new_event->type = type;
     new_event->params = params;
@@ -67,7 +67,7 @@ netrix_event* create_event(char* type, map* params, long timestamp) {
     return new_event;
 }
 
-char* serialize_event(netrix_event* event) {
+char* netrix_serialize_event(netrix_event* event) {
     json_object* obj = json_object_new_object();
 
     json_object_object_add(obj, "replica", json_object_new_string(event->replica));
@@ -75,10 +75,10 @@ char* serialize_event(netrix_event* event) {
     json_object_object_add(obj, "timestamp", json_object_new_double((double) event->timestamp));
 
     struct json_object* params_obj = json_object_new_object();
-    if(map_size(event->params) != 0) {
-        deque_elem* e = map_iterator(event->params);
+    if(netrix_map_size(event->params) != 0) {
+        netrix_deque_elem* e = map_iterator(event->params);
         for(;e!= NULL; e = e->next) {
-            map_elem* map_e = (map_elem*) e->elem;
+            netrix_map_elem* map_e = (netrix_map_elem*) e->elem;
             json_object_object_add(params_obj, map_e->key, json_object_new_string((char*) map_e->value));
         }
     }
@@ -91,6 +91,6 @@ char* serialize_event(netrix_event* event) {
     return result;
 }
 
-void free_event(netrix_event* event) {
+void netrix_free_event(netrix_event* event) {
     free(event);
 }

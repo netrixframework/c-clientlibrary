@@ -4,7 +4,7 @@
 #include "ds.h"
 
 // TODO: 
-// 1. add concurrent accessor and modifier functions to deque
-// 2. add mutex to the deque struct and initialize it 
+// 1. add concurrent accessor and modifier functions to netrix_deque
+// 2. add mutex to the netrix_deque struct and initialize it 
 
 #endif

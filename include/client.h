@@ -13,7 +13,7 @@ typedef struct client_config {
     const char* id;
     const char* netrix_addr;
     const char* listen_addr;
-    map* info;
+    netirx_map* info;
     directive_handler start_directive_handler;
     directive_handler stop_directive_handler;
     directive_handler restart_directive_handler;
@@ -21,17 +21,17 @@ typedef struct client_config {
 
 typedef struct netrix_client {
     client_config config;
-    deque* message_queue;
-    http_server* http_server;
-    map* message_counter;
+    netrix_deque* message_queue;
+    netrix_http_server* http_server;
+    netirx_map* message_counter;
 } netrix_client;
 
 netrix_client* create_client(client_config);
-long run_client(netrix_client*);
-long send_message(netrix_client*, netrix_message*);
-long sent_event(netrix_client*, netrix_event*);
-bool have_message(netrix_client*);
-netrix_message* receive_message(netrix_client*);
-void free_client(netrix_client*);
+long netrix_run_client(netrix_client*);
+long netrix_send_message(netrix_client*, netrix_message*);
+long netrix_sent_event(netrix_client*, netrix_event*);
+bool netrix_have_message(netrix_client*);
+netrix_message* netrix_receive_message(netrix_client*);
+void netrix_free_client(netrix_client*);
 
 #endif

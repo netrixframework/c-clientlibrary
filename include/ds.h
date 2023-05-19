@@ -4,62 +4,61 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-typedef struct deque_elem {
+typedef struct netrix_deque_elem {
     void* elem;
-    struct deque_elem* next;
-    struct deque_elem* prev;
-} deque_elem;
+    struct netrix_deque_elem* next;
+    struct netrix_deque_elem* prev;
+} netrix_deque_elem;
 
-typedef struct deque {
-    deque_elem* head;
-    deque_elem* tail;
+typedef struct netrix_deque {
+    netrix_deque_elem* head;
+    netrix_deque_elem* tail;
     int size;
-    
-} deque;
+} netrix_deque;
 
-deque* create_deque(void);
-void deque_push_front(deque*, void*);
-void deque_push_back(deque*, void*);
-void* deque_pop_front(deque*);
-void* deque_pop_back(deque*);
-void* deque_remove(deque*, int);
-void deque_insert(deque*, void*, int);
-int deque_size(deque*);
-void* deque_get(deque*, int);
-void free_deque(deque*);
+netrix_deque* netrix_create_deque(void);
+void netrix_deque_push_front(netrix_deque*, void*);
+void netrix_deque_push_back(netrix_deque*, void*);
+void* netrix_deque_pop_front(netrix_deque*);
+void* netrix_deque_pop_back(netrix_deque*);
+void* netrix_deque_remove(netrix_deque*, int);
+void netrix_deque_insert(netrix_deque*, void*, int);
+int netrix_deque_size(netrix_deque*);
+void* netrix_deque_get(netrix_deque*, int);
+void netrix_free_deque(netrix_deque*);
 
-deque_elem* deque_iterator(deque*);
+netrix_deque_elem* netrix_deque_iterator(netrix_deque*);
 
-typedef struct map_elem {
+typedef struct netrix_map_elem {
     const char* key;
     void* value;
-} map_elem;
+} netrix_map_elem;
 
-typedef struct map {
-    deque* elems;
-} map;
+typedef struct netirx_map {
+    netrix_deque* elems;
+} netirx_map;
 
-map* create_map(void);
-void map_add(map*, const char*, void*);
-void* map_remove(map*, const char*);
-int map_exists_index(map*, const char*);
-bool map_exists(map*, const char*);
-void* map_get(map*, const char*);
-int map_size(map*);
-void free_map(map*);
+netirx_map* netrix_create_map(void);
+void netrix_map_add(netirx_map*, const char*, void*);
+void* netrix_map_remove(netirx_map*, const char*);
+int netrix_map_exists_index(netirx_map*, const char*);
+bool netrix_map_exists(netirx_map*, const char*);
+void* netrix_map_get(netirx_map*, const char*);
+int netrix_map_size(netirx_map*);
+void netrix_free_map(netirx_map*);
 
-deque_elem* map_iterator(map*);
+netrix_deque_elem* map_iterator(netirx_map*);
 
-typedef struct string {
+typedef struct netrix_string {
   char *ptr;
   size_t len;
-} string;
+} netrix_string;
 
-string* create_string(char*);
-string* string_append(string*, char*);
-string* string_appendn(string*, char*, size_t n);
-char* string_str(string*);
-size_t string_len(string*);
-void free_string(string*);
+netrix_string* netrix_create_string(char*);
+netrix_string* netrix_string_append(netrix_string*, char*);
+netrix_string* netrix_string_appendn(netrix_string*, char*, size_t n);
+char* netrix_string_str(netrix_string*);
+size_t netrix_string_len(netrix_string*);
+void netrix_free_string(netrix_string*);
 
 #endif

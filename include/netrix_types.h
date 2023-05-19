@@ -14,17 +14,17 @@ typedef struct netrix_message {
 typedef struct netrix_event {
     char* type;
     char* replica;
-    map* params;
+    netirx_map* params;
     long timestamp;
 } netrix_event;
 
-netrix_message* create_message(char*, char*, char*);
-char* serialize_message(netrix_message*);
-netrix_message* deserialize_message(char*);
-void free_message(netrix_message*);
+netrix_message* netrix_create_message(char*, char*, char*);
+char* netrix_serialize_message(netrix_message*);
+netrix_message* netrix_deserialize_message(char*);
+void netrix_free_message(netrix_message*);
 
-netrix_event* create_event(char*, map*, long);
-char* serialize_event(netrix_event*);
-void free_event(netrix_event*);
+netrix_event* netrix_create_event(char*, netirx_map*, long);
+char* netrix_serialize_event(netrix_event*);
+void netrix_free_event(netrix_event*);
 
 #endif

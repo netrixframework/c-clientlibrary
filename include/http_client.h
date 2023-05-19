@@ -3,25 +3,25 @@
 
 #include "ds.h"
 
-typedef struct http_request {
+typedef struct netrix_http_request {
     char* body;
     char* method;
-    map* headers;
+    netirx_map* headers;
     char* url;
-} http_request;
+} netrix_http_request;
 
-typedef struct http_response {
+typedef struct netrix_http_response {
     long error_code;
     char* error;
     char* response_body;
-} http_response;
+} netrix_http_response;
 
-http_response* http_create_response(void);
-void http_free_response(http_response*);
+netrix_http_response* netrix_http_create_response(void);
+void netrix_http_free_response(netrix_http_response*);
 
-http_response* http_post(char* url, char* body, map* headers);
-http_response* http_get(char* url, map* headers);
+netrix_http_response* netrix_http_post(char* url, char* body, netirx_map* headers);
+netrix_http_response* netrix_http_get(char* url, netirx_map* headers);
 
-http_response* http_do(http_request*);
+netrix_http_response* netrix_http_do(netrix_http_request*);
 
 #endif
