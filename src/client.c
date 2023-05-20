@@ -2,16 +2,51 @@
 #include "http_client.h"
 #include "http_server.h"
 #include <string.h>
+#include <json-c/json.h>
 
 
 netrix_http_reply* handle_message(struct mg_http_message* http_message, void* fn_data) {
-    // TODO: add message to the message queue
-    return NULL;
+    char* body = strndup(http_message->body.ptr, http_message->body.len);
+    netrix_message* message = netrix_deserialize_message(body);
+    netrix_client* client = (netrix_client*) fn_data;
+    netrix_cdeque_push_back(client->message_queue, message);
+
+    netrix_map* params = netrix_create_map();
+    netrix_map_add(params, "message_id", strdup(message->id));
+    netrix_event* e = netrix_create_event("MessageReceive", params);
+    netrix_send_event(client, e);
+    netrix_free_event(e);
+    netrix_free_map(params);
+
+    netrix_http_reply* reply = netrix_http_create_reply();
+    reply->body = "OK";
+    return reply;
 }
 
 netrix_http_reply* handle_directive(struct mg_http_message* http_message, void* fn_data) {
-    // TODO: check if handlers are not null and invoke the right handler
-    return NULL;
+    char* body = strndup(http_message->body.ptr, http_message->body.len);
+    json_object* obj = json_tokener_parse(body);
+    const char* action = strdup(json_object_object_get(obj, "action"));
+
+    netrix_client* client = (netrix_client *) fn_data;
+
+    if (strcmp(action, "START") == 0) {
+        if(client->config.start_directive_handler != NULL) {
+            client->config.start_directive_handler(action);
+        }
+    } else if (strcmp(action, "STOP") == 0) {
+        if(client->config.stop_directive_handler != NULL) {
+            client->config.stop_directive_handler(action);
+        }
+    } else if(strcmp(action, "RESTART") == 0) {
+        if(client->config.restart_directive_handler != NULL) {
+            client->config.restart_directive_handler(action);
+        }
+    }
+
+    netrix_http_reply* reply = netrix_http_create_reply();
+    reply->body = "OK";
+    return reply;
 }
 
 netrix_client* create_client(client_config config) {
@@ -27,9 +62,20 @@ netrix_client* create_client(client_config config) {
     return new_client;
 }
 
-long netrix_run_client(netrix_client* c) {
-    // TODO: initiate a request to replica endpoint indicating ready after starting the http server on a separate thread
-    return 0;
+void* run_server(void* arg) {
+    netrix_http_server* http_server = (netrix_http_server *) arg;
+    return netrix_http_listen(http_server);
+}
+
+int netrix_run_client(netrix_client* c) {
+    return pthread_create(&c->server_thread, NULL, run_server, c->http_server);
+}
+
+void netrix_signal_client(netrix_client* c, int signal) {
+    if (signal > 0) {
+        netrix_http_signal(c->http_server, signal);
+        pthread_join(c->server_thread, NULL);
+    }
 }
 
 char* get_message_id(netrix_client* c, char* from, char* to) {
@@ -59,12 +105,19 @@ long netrix_send_message(netrix_client* c, netrix_message* message) {
     message->from = c->config.id;
     message->id = get_message_id(c, message->from, message->to);
 
+    netrix_map* params = netrix_create_map();
+    netrix_map_add(params, "message_id", strdup(message->id));
+    netrix_event* e = netrix_create_event("MessageSend", params);
+    netrix_send_event(c, e);
+    netrix_free_event(e);
+    netrix_free_map(params);
+
     netrix_string* addr = netrix_create_string(NULL);
     netrix_string_append(addr, "http://");
     netrix_string_append(addr, c->config.netrix_addr);
     netrix_string_append(addr, "/message");
 
-    netirx_map* headers = netrix_create_map();
+    netrix_map* headers = netrix_create_map();
     netrix_map_add(headers, "Content-Type", "application/json");
 
     netrix_http_response* response = netrix_http_post(netrix_string_str(addr), netrix_serialize_message(message), headers);
@@ -74,7 +127,7 @@ long netrix_send_message(netrix_client* c, netrix_message* message) {
     return response->error_code;
 }
 
-long netrix_sent_event(netrix_client* c, netrix_event* event) {
+long netrix_send_event(netrix_client* c, netrix_event* event) {
     event->replica = c->config.id;
 
     netrix_string* addr = netrix_create_string(NULL);
@@ -82,7 +135,7 @@ long netrix_sent_event(netrix_client* c, netrix_event* event) {
     netrix_string_append(addr, c->config.netrix_addr);
     netrix_string_append(addr, "/event");
 
-    netirx_map* headers = netrix_create_map();
+    netrix_map* headers = netrix_create_map();
     netrix_map_add(headers, "Content-Type", "application/json");
 
     netrix_http_response* response = netrix_http_post(netrix_string_str(addr), netrix_serialize_event(event), headers);
@@ -93,11 +146,11 @@ long netrix_sent_event(netrix_client* c, netrix_event* event) {
 }
 
 bool netrix_have_message(netrix_client* c) {
-    return c->message_queue->size == 0;
+    return netrix_cdeque_size(c->message_queue) == 0;
 }
 
 netrix_message* netrix_receive_message(netrix_client* c) {
-    void* val = netrix_deque_pop_front(c->message_queue);
+    void* val = netrix_cdeque_pop_front(c->message_queue);
     if (val != NULL) {
         return (netrix_message*) val;
     }

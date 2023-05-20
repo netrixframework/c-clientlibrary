@@ -2,15 +2,16 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdbool.h>
+#include <pthread.h>
 
-netirx_map* netrix_create_map(void) {
-    netirx_map* new_m = malloc(sizeof(netirx_map));
+netrix_map* netrix_create_map(void) {
+    netrix_map* new_m = malloc(sizeof(netrix_map));
     new_m->elems = netrix_create_deque();
 
     return new_m;
 }
 
-void netrix_map_add(netirx_map* m, const char* key, void* value) {
+void netrix_map_add(netrix_map* m, const char* key, void* value) {
     netrix_map_remove(m, key);
 
     netrix_map_elem* new = malloc(sizeof(netrix_map_elem));
@@ -19,7 +20,7 @@ void netrix_map_add(netirx_map* m, const char* key, void* value) {
     netrix_deque_push_back(m->elems, new);
 }
 
-void* netrix_map_remove(netirx_map* m, const char* key) {
+void* netrix_map_remove(netrix_map* m, const char* key) {
     int index = netrix_map_exists_index(m,key);
     if (index == -1) {
         // Key does not exist
@@ -32,7 +33,7 @@ void* netrix_map_remove(netirx_map* m, const char* key) {
     return ret;
 }
 
-int netrix_map_exists_index(netirx_map* m, const char* key) {
+int netrix_map_exists_index(netrix_map* m, const char* key) {
     netrix_deque_elem* e = m->elems->head;
     for(int i=0; i< m->elems->size;i++) {
         netrix_map_elem* m_e = (netrix_map_elem*) e->elem;
@@ -44,11 +45,11 @@ int netrix_map_exists_index(netirx_map* m, const char* key) {
     return -1;
 }
 
-bool netrix_map_exists(netirx_map* m, const char* key) {
+bool netrix_map_exists(netrix_map* m, const char* key) {
     return netrix_map_exists_index(m, key) == -1;
 }
 
-void* netrix_map_get(netirx_map* m, const char* key) {
+void* netrix_map_get(netrix_map* m, const char* key) {
     int index = netrix_map_exists_index(m, key);
     if (index == -1) {
         return NULL;
@@ -56,18 +57,18 @@ void* netrix_map_get(netirx_map* m, const char* key) {
     return netrix_deque_get(m->elems, index);
 }
 
-int netrix_map_size(netirx_map* m) {
+int netrix_map_size(netrix_map* m) {
     if(m == NULL) {
         return 0;
     }
     return netrix_deque_size(m->elems);
 }
 
-void netrix_free_map(netirx_map* m) {
+void netrix_free_map(netrix_map* m) {
     free(m);
 }
 
-netrix_deque_elem* map_iterator(netirx_map* m) {
+netrix_deque_elem* map_iterator(netrix_map* m) {
     if(m == NULL) {
         return NULL;
     }
@@ -80,7 +81,10 @@ netrix_deque* netrix_create_deque(void) {
     new_deque->head = NULL;
     new_deque->tail = NULL;
     new_deque->size = 0;
-    
+
+    pthread_mutex_t mutex;
+    pthread_mutex_init(&mutex, NULL);
+    new_deque->mutex = mutex;
     return new_deque;
 }
 
@@ -179,7 +183,60 @@ int netrix_deque_size(netrix_deque* d) {
 }
 
 void netrix_free_deque(netrix_deque* d) {
+    pthread_mutex_destroy(&d->mutex);
     free(d);
+}
+
+int netrix_cdeque_insert(netrix_deque* d, void* elem, int pos) {
+    if(pthread_mutex_lock(&d->mutex) != 0) {
+        return -1;
+    }
+    netrix_deque_insert(d, elem, pos);
+    return pthread_mutex_unlock(&d->mutex);
+}
+
+void* netrix_cdeque_remove(netrix_deque* d, int pos) {
+    if(pthread_mutex_lock(&d->mutex) != 0) {
+        return NULL;
+    }
+    void* ret = netrix_deque_remove(d, pos);
+    pthread_mutex_unlock(&d->mutex);
+    return ret;
+}
+
+
+int netrix_cdeque_push_front(netrix_deque* d, void* elem) {
+    return netrix_cdeque_insert(d, elem, 0);
+}
+
+int netrix_cdeque_push_back(netrix_deque* d, void* elem) {
+    return netrix_cdeque_insert(d, elem, d->size);
+}
+
+void* netrix_cdeque_pop_front(netrix_deque* d) {
+    return netrix_cdeque_remove(d, 0);
+}
+
+void* netrix_cdeque_pop_back(netrix_deque* d) {
+    return netrix_cdeque_remove(d, d->size-1);
+}
+
+void* netrix_cdeque_get(netrix_deque* d, int pos) {
+    if(pthread_mutex_lock(&d->mutex) != 0) {
+        return NULL;
+    }
+    void* ret = netrix_deque_get(d, pos);
+    pthread_mutex_unlock(&d->mutex);
+    return ret;
+}
+
+int netrix_cdeque_size(netrix_deque* d) {
+    if(pthread_mutex_lock(&d->mutex) != 0) {
+        return -1;
+    }
+    int size = netrix_deque_size(d);
+    pthread_mutex_unlock(&d->mutex);
+    return size;
 }
 
 netrix_deque_elem* netrix_deque_iterator(netrix_deque* d) {
@@ -188,7 +245,6 @@ netrix_deque_elem* netrix_deque_iterator(netrix_deque* d) {
     }
     return d->head;
 }
-
 
 netrix_string* netrix_create_string(char* a) {
     netrix_string* s = malloc(sizeof(netrix_string));

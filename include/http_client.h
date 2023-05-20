@@ -6,7 +6,7 @@
 typedef struct netrix_http_request {
     char* body;
     char* method;
-    netirx_map* headers;
+    netrix_map* headers;
     char* url;
 } netrix_http_request;
 
@@ -19,8 +19,8 @@ typedef struct netrix_http_response {
 netrix_http_response* netrix_http_create_response(void);
 void netrix_http_free_response(netrix_http_response*);
 
-netrix_http_response* netrix_http_post(char* url, char* body, netirx_map* headers);
-netrix_http_response* netrix_http_get(char* url, netirx_map* headers);
+netrix_http_response* netrix_http_post(char* url, char* body, netrix_map* headers);
+netrix_http_response* netrix_http_get(char* url, netrix_map* headers);
 
 netrix_http_response* netrix_http_do(netrix_http_request*);
 

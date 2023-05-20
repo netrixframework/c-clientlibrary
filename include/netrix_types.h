@@ -14,7 +14,7 @@ typedef struct netrix_message {
 typedef struct netrix_event {
     char* type;
     char* replica;
-    netirx_map* params;
+    netrix_map* params;
     long timestamp;
 } netrix_event;
 
@@ -23,7 +23,7 @@ char* netrix_serialize_message(netrix_message*);
 netrix_message* netrix_deserialize_message(char*);
 void netrix_free_message(netrix_message*);
 
-netrix_event* netrix_create_event(char*, netirx_map*, long);
+netrix_event* netrix_create_event(char*, netrix_map*);
 char* netrix_serialize_event(netrix_event*);
 void netrix_free_event(netrix_event*);
 

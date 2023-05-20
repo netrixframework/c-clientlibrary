@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <json-c/json.h>
+#include <time.h>
 
 netrix_message* netrix_create_message(char* to, char* data, char* type) {
     netrix_message* new_message = malloc(sizeof(netrix_message));
@@ -59,11 +60,11 @@ void netrix_free_message(netrix_message* message) {
     free(message);
 }
 
-netrix_event* netrix_create_event(char* type, netirx_map* params, long timestamp) {
+netrix_event* netrix_create_event(char* type, netrix_map* params) {
     netrix_event* new_event = malloc(sizeof(netrix_event));
     new_event->type = type;
     new_event->params = params;
-    new_event->timestamp = timestamp;
+    new_event->timestamp = (long) time(NULL);
     return new_event;
 }
 

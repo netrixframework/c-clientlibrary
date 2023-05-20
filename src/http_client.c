@@ -17,7 +17,7 @@ typedef struct http_post_fn_data {
     netrix_http_response* response;
 } http_post_fn_data;
 
-netrix_http_response* netrix_http_post(char* url, char* body, netirx_map* headers) {
+netrix_http_response* netrix_http_post(char* url, char* body, netrix_map* headers) {
     netrix_http_request request;
     request.method = "POST";
     request.body = body;
@@ -27,7 +27,7 @@ netrix_http_response* netrix_http_post(char* url, char* body, netirx_map* header
     return netrix_http_do(&request);
 }
 
-netrix_http_response* netrix_http_get(char* url, netirx_map* headers) {
+netrix_http_response* netrix_http_get(char* url, netrix_map* headers) {
     netrix_http_request request;
     request.method = "GET";
     request.url = url;

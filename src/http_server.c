@@ -4,6 +4,8 @@
 
 netrix_http_reply* netrix_http_create_reply(void) {
     netrix_http_reply* reply = malloc(sizeof(netrix_http_reply));
+    reply->headers = NULL;
+    reply->status_code = 200;
     return reply;
 }
 
@@ -21,6 +23,7 @@ netrix_http_server* netrix_http_create_server(const char* listen_addr, void* fn_
     server->handlers = netrix_create_map();
     server->mg_mgr = malloc(sizeof(mg_mgr));
     server->fn_data = fn_data;
+    server->signal = 0;
 
     mg_mgr_init(server->mg_mgr);
     mg_log_set(MG_LL_INFO);
@@ -59,19 +62,24 @@ void connection_handler(struct mg_connection *c, int ev, void *ev_data, void *fn
 
         netrix_http_free_reply(reply);
     }
-    (void) fn_data;
 }
 
 void netrix_http_add_handler(netrix_http_server* s, const char* uri, netrix_http_handler handler) {
     netrix_map_add(s->handlers, uri, handler);
 }
 
-void netrix_http_listen(netrix_http_server* s) {
+void* netrix_http_listen(netrix_http_server* s) {
     mg_http_listen(s->mg_mgr, s->listen_addr, connection_handler,s);
-    return;
+    while (s->signal == 0) mg_mgr_poll(s->mg_mgr, 1000);
+    return NULL;
+}
+
+void netrix_http_signal(netrix_http_server* server, int signal) {
+    server->signal = signal;
 }
 
 void netrix_http_free_server(netrix_http_server* s) {
     mg_mgr_free(s->mg_mgr);
+    free(s->mg_mgr);
     free(s);
 }

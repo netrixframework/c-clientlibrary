@@ -3,6 +3,7 @@
 
 #include "ds.h"
 #include "mongoose.h"
+#include <pthread.h>
 
 typedef struct mg_mgr mg_mgr;
 
@@ -19,14 +20,16 @@ typedef netrix_http_reply* (*netrix_http_handler)(struct mg_http_message*, void*
 
 typedef struct netrix_http_server {
     const char* listen_addr;
-    netirx_map* handlers;
+    netrix_map* handlers;
     mg_mgr* mg_mgr;
     void* fn_data;
+    int signal;
 } netrix_http_server;
 
 netrix_http_server* netrix_http_create_server(const char*, void* fn_data);
 void netrix_http_add_handler(netrix_http_server*, const char*, netrix_http_handler);
-void netrix_http_listen(netrix_http_server*);
+void* netrix_http_listen(netrix_http_server*);
+void netrix_http_signal(netrix_http_server*, int);
 void netrix_http_free_server(netrix_http_server*);
 
 #endif
