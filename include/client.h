@@ -10,7 +10,7 @@
 
 typedef void (*directive_handler)(char*);
 
-typedef struct client_config {
+typedef struct netrix_client_config {
     const char* id;
     const char* netrix_addr;
     const char* listen_addr;
@@ -18,17 +18,17 @@ typedef struct client_config {
     directive_handler start_directive_handler;
     directive_handler stop_directive_handler;
     directive_handler restart_directive_handler;
-} client_config;
+} netrix_client_config;
 
 typedef struct netrix_client {
-    client_config config;
+    netrix_client_config config;
     netrix_deque* message_queue;
     netrix_http_server* http_server;
     netrix_map* message_counter;
     pthread_t server_thread;
 } netrix_client;
 
-netrix_client* create_client(client_config);
+netrix_client* netrix_create_client(netrix_client_config);
 int netrix_run_client(netrix_client*);
 void netrix_signal_client(netrix_client*, int);
 long netrix_send_message(netrix_client*, netrix_message*);

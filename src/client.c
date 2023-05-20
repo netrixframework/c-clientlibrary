@@ -49,7 +49,7 @@ netrix_http_reply* handle_directive(struct mg_http_message* http_message, void* 
     return reply;
 }
 
-netrix_client* create_client(client_config config) {
+netrix_client* netrix_create_client(netrix_client_config config) {
     netrix_client* new_client = malloc(sizeof(netrix_client));
     new_client->config = config;
     new_client->message_queue = netrix_create_deque();
@@ -79,6 +79,7 @@ void netrix_signal_client(netrix_client* c, int signal) {
 }
 
 char* get_message_id(netrix_client* c, char* from, char* to) {
+    // TODO: move this to thread safe code.
     netrix_string* key = netrix_create_string(from);
     netrix_string_append(key, "_");
     netrix_string_append(key, to);
