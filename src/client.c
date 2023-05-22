@@ -4,7 +4,6 @@
 #include <string.h>
 #include <json-c/json.h>
 
-
 netrix_http_reply* handle_message(struct mg_http_message* http_message, void* fn_data) {
     char* body = strndup(http_message->body.ptr, http_message->body.len);
     netrix_message* message = netrix_deserialize_message(body);
@@ -26,22 +25,21 @@ netrix_http_reply* handle_message(struct mg_http_message* http_message, void* fn
 netrix_http_reply* handle_directive(struct mg_http_message* http_message, void* fn_data) {
     char* body = strndup(http_message->body.ptr, http_message->body.len);
     json_object* obj = json_tokener_parse(body);
-    const char* action = strdup(json_object_object_get(obj, "action"));
+    json_object* action_obj = json_object_object_get(obj, "action");
+    const char* action = strdup(json_object_get_string(action_obj));
 
     netrix_client* client = (netrix_client *) fn_data;
-
+    NETRIX_DIRECTIVE directive;
     if (strcmp(action, "START") == 0) {
-        if(client->config.start_directive_handler != NULL) {
-            client->config.start_directive_handler(action);
-        }
+        directive = NETRIX_START_DIRECTIVE;
     } else if (strcmp(action, "STOP") == 0) {
-        if(client->config.stop_directive_handler != NULL) {
-            client->config.stop_directive_handler(action);
-        }
+        directive = NETRIX_STOP_DIRECTIVE;
     } else if(strcmp(action, "RESTART") == 0) {
-        if(client->config.restart_directive_handler != NULL) {
-            client->config.restart_directive_handler(action);
-        }
+        directive = NETRIX_RESTART_DIRECTIVE;
+    }
+
+    if (client->config.directive_handler != NULL) {
+        client->config.directive_handler(directive);
     }
 
     netrix_http_reply* reply = netrix_http_create_reply();
@@ -68,6 +66,7 @@ void* run_server(void* arg) {
 }
 
 int netrix_run_client(netrix_client* c) {
+    // TODO: send a replica request initiating connection
     return pthread_create(&c->server_thread, NULL, run_server, c->http_server);
 }
 
@@ -124,6 +123,7 @@ long netrix_send_message(netrix_client* c, netrix_message* message) {
     netrix_http_response* response = netrix_http_post(netrix_string_str(addr), netrix_serialize_message(message), headers);
 
     netrix_free_string(addr);
+    netrix_free_map(headers);
 
     return response->error_code;
 }
@@ -142,6 +142,7 @@ long netrix_send_event(netrix_client* c, netrix_event* event) {
     netrix_http_response* response = netrix_http_post(netrix_string_str(addr), netrix_serialize_event(event), headers);
 
     netrix_free_string(addr);
+    netrix_free_map(headers);
 
     return response->error_code;
 }
