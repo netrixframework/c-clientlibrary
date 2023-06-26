@@ -66,7 +66,7 @@ void* netrix_map_get(netrix_map*, const char*);
 int netrix_map_size(netrix_map*);
 void netrix_free_map(netrix_map*);
 
-netrix_deque_elem* map_iterator(netrix_map*);
+netrix_deque_elem* netrix_map_iterator(netrix_map*);
 
 // Netrix string operations
 typedef struct netrix_string {

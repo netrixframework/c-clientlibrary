@@ -2,6 +2,7 @@
 #include "http_client.h"
 #include "http_server.h"
 #include <string.h>
+#include <stdio.h>
 #include <json-c/json.h>
 
 netrix_http_reply* handle_message(struct mg_http_message* http_message, void* fn_data) {
@@ -39,12 +40,47 @@ netrix_http_reply* handle_directive(struct mg_http_message* http_message, void* 
     }
 
     if (client->config.directive_handler != NULL) {
-        client->config.directive_handler(directive);
+        client->config.directive_handler(directive, client->config.user_data);
     }
 
     netrix_http_reply* reply = netrix_http_create_reply();
     reply->body = "OK";
     return reply;
+}
+
+int netrix_send_replica_info(netrix_client* client, int ready) {
+    json_object* obj = json_object_new_object();
+
+    json_object_object_add(obj, "id", json_object_new_string(client->config.id));
+    json_object_object_add(obj, "ready", json_object_new_boolean(ready));
+    json_object_object_add(obj, "addr", json_object_new_string(client->config.listen_addr));
+    json_object* info_obj = json_object_new_object();
+    if(netrix_map_size(client->config.info)!=0) {
+        for(netrix_deque_elem* e= netrix_map_iterator(client->config.info); e != NULL; e = e->next) {
+            netrix_map_elem* map_e = (netrix_map_elem*) e->elem;
+            json_object_object_add(info_obj, strdup(map_e->key), json_object_new_string(strdup((char*) map_e->value)));
+        }
+    }
+    json_object_object_add(obj, "info", info_obj);
+    
+    char* replica_data = strdup(json_object_to_json_string(obj));
+    json_object_put(obj);
+    
+
+    netrix_string* addr = netrix_create_string(NULL);
+    netrix_string_append(addr, "http://");
+    netrix_string_append(addr, client->config.netrix_addr);
+    netrix_string_append(addr, "/replica");
+
+    netrix_map* headers = netrix_create_map();
+    netrix_map_add(headers, "Content-Type", "application/json");
+
+    netrix_http_response* response = netrix_http_post(netrix_string_str(addr), replica_data, headers);
+
+    netrix_free_string(addr);
+    netrix_free_map(headers);
+
+    return response->error_code;
 }
 
 netrix_client* netrix_create_client(netrix_client_config config) {
@@ -57,6 +93,10 @@ netrix_client* netrix_create_client(netrix_client_config config) {
     new_client->http_server = server;
     new_client->message_counter = netrix_create_map();
 
+    if(netrix_send_replica_info(new_client, 0) != 0) {
+        return NULL;
+    }
+
     return new_client;
 }
 
@@ -66,7 +106,9 @@ void* run_server(void* arg) {
 }
 
 int netrix_run_client(netrix_client* c) {
-    // TODO: send a replica request initiating connection
+    if(netrix_send_replica_info(c, 1) != 0) {
+        return -1;
+    }
     return pthread_create(&c->server_thread, NULL, run_server, c->http_server);
 }
 
@@ -102,7 +144,7 @@ char* get_message_id(netrix_client* c, char* from, char* to) {
 }
 
 long netrix_send_message(netrix_client* c, netrix_message* message) {
-    message->from = c->config.id;
+    strcpy(message->from, c->config.id);
     message->id = get_message_id(c, message->from, message->to);
 
     netrix_map* params = netrix_create_map();

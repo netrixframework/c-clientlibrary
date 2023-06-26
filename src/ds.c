@@ -68,7 +68,7 @@ void netrix_free_map(netrix_map* m) {
     free(m);
 }
 
-netrix_deque_elem* map_iterator(netrix_map* m) {
+netrix_deque_elem* netrix_map_iterator(netrix_map* m) {
     if(m == NULL) {
         return NULL;
     }

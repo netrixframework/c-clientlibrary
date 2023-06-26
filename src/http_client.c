@@ -65,7 +65,7 @@ netrix_http_response* netrix_http_do(netrix_http_request* req) {
 
         struct curl_slist* headers = NULL;
         if(netrix_map_size(req->headers) != 0) {
-            netrix_deque_elem* elem = map_iterator(req->headers);
+            netrix_deque_elem* elem = netrix_map_iterator(req->headers);
             for (;elem != NULL; elem = elem->next) {
                 netrix_map_elem* header = (netrix_map_elem*) elem->elem;
                 netrix_string* header_s = netrix_create_string((char*) header->key);
@@ -81,7 +81,7 @@ netrix_http_response* netrix_http_do(netrix_http_request* req) {
             curl_easy_setopt(handle, CURLOPT_POSTFIELDS, req->body);
         }
         CURLcode res = curl_easy_perform(handle);
-        if (res != CURLE_OK) {
+        if (res == CURLE_OK) {
             long resp_code;
             curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &resp_code);
             if (resp_code >= 400) {

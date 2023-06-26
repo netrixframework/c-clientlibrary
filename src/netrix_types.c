@@ -77,7 +77,7 @@ char* netrix_serialize_event(netrix_event* event) {
 
     struct json_object* params_obj = json_object_new_object();
     if(netrix_map_size(event->params) != 0) {
-        netrix_deque_elem* e = map_iterator(event->params);
+        netrix_deque_elem* e = netrix_map_iterator(event->params);
         for(;e!= NULL; e = e->next) {
             netrix_map_elem* map_e = (netrix_map_elem*) e->elem;
             json_object_object_add(params_obj, map_e->key, json_object_new_string((char*) map_e->value));

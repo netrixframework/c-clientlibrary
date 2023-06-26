@@ -10,13 +10,14 @@
 
 typedef enum {NETRIX_START_DIRECTIVE, NETRIX_STOP_DIRECTIVE, NETRIX_RESTART_DIRECTIVE} NETRIX_DIRECTIVE;
 
-typedef void (*directive_handler)(NETRIX_DIRECTIVE);
+typedef void (*directive_handler)(NETRIX_DIRECTIVE, void*);
 
 typedef struct netrix_client_config {
     const char* id;
     const char* netrix_addr;
     const char* listen_addr;
     netrix_map* info;
+    void* user_data;
     directive_handler directive_handler;
 } netrix_client_config;
 
