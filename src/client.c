@@ -38,13 +38,9 @@ netrix_http_reply* handle_message(char *body, void* fn_data) {
 }
 
 netrix_http_reply* handle_directive(char *body, void* fn_data) {
-    printf("Received a directive from netrix\n");
-
     json_object* obj = json_tokener_parse(body);
     json_object* action_obj = json_object_object_get(obj, "action");
     const char* action = strdup(json_object_get_string(action_obj));
-
-    printf("Directive: %s\n", action);
 
     netrix_client* client = (netrix_client *) fn_data;
     NETRIX_DIRECTIVE directive;
