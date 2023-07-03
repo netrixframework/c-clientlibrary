@@ -1,6 +1,7 @@
 #include "netrix_types.h"
 #include <stddef.h>
 #include <string.h>
+#include <stdint.h>
 #include <json-c/json.h>
 #include <time.h>
 
@@ -73,7 +74,7 @@ char* netrix_serialize_event(netrix_event* event) {
 
     json_object_object_add(obj, "replica", json_object_new_string(event->replica));
     json_object_object_add(obj, "type", json_object_new_string(event->type));
-    json_object_object_add(obj, "timestamp", json_object_new_double((double) event->timestamp));
+    json_object_object_add(obj, "timestamp", json_object_new_int64((int64_t) event->timestamp));
 
     struct json_object* params_obj = json_object_new_object();
     if(netrix_map_size(event->params) != 0) {

@@ -5,8 +5,22 @@
 #include <stdio.h>
 #include <json-c/json.h>
 
-netrix_http_reply* handle_message(struct mg_http_message* http_message, void* fn_data) {
-    char* body = strndup(http_message->body.ptr, http_message->body.len);
+char *netrix_directive_name(NETRIX_DIRECTIVE d) {
+    switch (d)  
+    {
+    case NETRIX_START_DIRECTIVE:
+        return "Start";
+    case NETRIX_STOP_DIRECTIVE:
+        return "Stop";
+    case NETRIX_RESTART_DIRECTIVE:
+        return "Restart";
+    default:
+        break;
+    }
+    return "";
+}
+
+netrix_http_reply* handle_message(char *body, void* fn_data) {
     netrix_message* message = netrix_deserialize_message(body);
     netrix_client* client = (netrix_client*) fn_data;
     netrix_cdeque_push_back(client->message_queue, message);
@@ -23,11 +37,14 @@ netrix_http_reply* handle_message(struct mg_http_message* http_message, void* fn
     return reply;
 }
 
-netrix_http_reply* handle_directive(struct mg_http_message* http_message, void* fn_data) {
-    char* body = strndup(http_message->body.ptr, http_message->body.len);
+netrix_http_reply* handle_directive(char *body, void* fn_data) {
+    printf("Received a directive from netrix\n");
+
     json_object* obj = json_tokener_parse(body);
     json_object* action_obj = json_object_object_get(obj, "action");
     const char* action = strdup(json_object_get_string(action_obj));
+
+    printf("Directive: %s\n", action);
 
     netrix_client* client = (netrix_client *) fn_data;
     NETRIX_DIRECTIVE directive;
@@ -83,6 +100,11 @@ int netrix_send_replica_info(netrix_client* client, int ready) {
     return response->error_code;
 }
 
+void* run_server(void* arg) {
+    netrix_http_server* http_server = (netrix_http_server *) arg;
+    return netrix_http_listen(http_server);
+}
+
 netrix_client* netrix_create_client(netrix_client_config config) {
     netrix_client* new_client = malloc(sizeof(netrix_client));
     new_client->config = config;
@@ -92,24 +114,18 @@ netrix_client* netrix_create_client(netrix_client_config config) {
     netrix_http_add_handler(server, "/directive", handle_directive);
     new_client->http_server = server;
     new_client->message_counter = netrix_create_map();
+    new_client->server_thread = (pthread_t) 0;
 
     if(netrix_send_replica_info(new_client, 0) != 0) {
         return NULL;
     }
+    pthread_create(&new_client->server_thread, NULL, run_server, server);
 
     return new_client;
 }
 
-void* run_server(void* arg) {
-    netrix_http_server* http_server = (netrix_http_server *) arg;
-    return netrix_http_listen(http_server);
-}
-
 int netrix_run_client(netrix_client* c) {
-    if(netrix_send_replica_info(c, 1) != 0) {
-        return -1;
-    }
-    return pthread_create(&c->server_thread, NULL, run_server, c->http_server);
+    return netrix_send_replica_info(c, 1);
 }
 
 void netrix_signal_client(netrix_client* c, int signal) {
@@ -126,13 +142,17 @@ char* get_message_id(netrix_client* c, char* from, char* to) {
     netrix_string_append(key, to);
 
     if(!netrix_map_exists(c->message_counter, netrix_string_str(key))) {
-        netrix_map_add(c->message_counter, netrix_string_str(key), 0);
+        int *count_ptr = malloc(sizeof(int));
+        *count_ptr = 0;
+        netrix_map_add(c->message_counter, netrix_string_str(key), count_ptr);
     }
 
-    int count = (int) netrix_map_get(c->message_counter, netrix_string_str(key));
-    netrix_map_add(c->message_counter, netrix_string_str(key), (void*) count+1);
+    int *count_ptr = (int *) netrix_map_get(c->message_counter, netrix_string_str(key));
+    int count = *count_ptr;
+    *count_ptr = *count_ptr + 1;
+    netrix_map_add(c->message_counter, netrix_string_str(key), count_ptr);
 
-    char count_s[3];
+    char count_s[12];
     sprintf(count_s, "%d", count);
 
     netrix_string* val = netrix_string_append(key, "_");
@@ -144,7 +164,7 @@ char* get_message_id(netrix_client* c, char* from, char* to) {
 }
 
 long netrix_send_message(netrix_client* c, netrix_message* message) {
-    strcpy(message->from, c->config.id);
+    message->from = strdup(c->config.id);
     message->id = get_message_id(c, message->from, message->to);
 
     netrix_map* params = netrix_create_map();
@@ -181,7 +201,8 @@ long netrix_send_event(netrix_client* c, netrix_event* event) {
     netrix_map* headers = netrix_create_map();
     netrix_map_add(headers, "Content-Type", "application/json");
 
-    netrix_http_response* response = netrix_http_post(netrix_string_str(addr), netrix_serialize_event(event), headers);
+    char *serialized_event = netrix_serialize_event(event);
+    netrix_http_response* response = netrix_http_post(netrix_string_str(addr), serialized_event, headers);
 
     netrix_free_string(addr);
     netrix_free_map(headers);

@@ -46,7 +46,7 @@ int netrix_map_exists_index(netrix_map* m, const char* key) {
 }
 
 bool netrix_map_exists(netrix_map* m, const char* key) {
-    return netrix_map_exists_index(m, key) == -1;
+    return netrix_map_exists_index(m, key) != -1;
 }
 
 void* netrix_map_get(netrix_map* m, const char* key) {
@@ -54,7 +54,8 @@ void* netrix_map_get(netrix_map* m, const char* key) {
     if (index == -1) {
         return NULL;
     }
-    return netrix_deque_get(m->elems, index);
+    netrix_map_elem* elem = (netrix_map_elem *) netrix_deque_get(m->elems, index);
+    return elem->value;
 }
 
 int netrix_map_size(netrix_map* m) {
@@ -79,7 +80,6 @@ netrix_deque_elem* netrix_map_iterator(netrix_map* m) {
 netrix_deque* netrix_create_deque(void) {
     netrix_deque* new_deque = malloc(sizeof(netrix_deque));
     new_deque->head = NULL;
-    new_deque->tail = NULL;
     new_deque->size = 0;
 
     pthread_mutex_t mutex;
@@ -102,12 +102,13 @@ void* netrix_deque_remove(netrix_deque* d, int pos) {
     netrix_deque_elem* next = elem->next;
     if (prev == NULL) {
         d->head = next;
-    } else if(next == NULL) {
-        d->tail = prev;
     } else {
         prev->next = next;
+    }
+    if (next != NULL) {
         next->prev = prev;
     }
+    
     void* e = elem->elem;
     free(elem);
     d->size--;
@@ -125,21 +126,28 @@ void netrix_deque_insert(netrix_deque* d, void* e, int pos) {
     new->prev = NULL;
     new->next = NULL;
 
-    netrix_deque_elem* prev = d->head;
-    for(int i = 0; i < pos; i++) {
-        prev = prev->next;
-    }
-    
-    if (prev == NULL) {
+    if (pos == 0) {
+        new->next = d->head;
+        if (d->head != NULL) {
+            d->head->prev = new;
+        }
         d->head = new;
-        d->tail = new;
+    } else if (pos == d->size) {
+        netrix_deque_elem* last = d->head;
+        while (last->next != NULL)
+            last = last->next;
+
+        last->next = new;
+        new->prev = last;
     } else {
+        netrix_deque_elem* prev = d->head;
+        for(int i = 0; i < pos-1; i++) {
+            prev = prev->next;
+        }
         new->next = prev->next;
         prev->next = new;
         new->prev = prev;
-        if(new->next == NULL) {
-            d->tail = new;
-        } else {
+        if (new->next != NULL) {
             new->next->prev = new;
         }
     }

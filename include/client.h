@@ -9,6 +9,7 @@
 #include <pthread.h>
 
 typedef enum {NETRIX_START_DIRECTIVE, NETRIX_STOP_DIRECTIVE, NETRIX_RESTART_DIRECTIVE} NETRIX_DIRECTIVE;
+char *netrix_directive_name(NETRIX_DIRECTIVE);
 
 typedef void (*directive_handler)(NETRIX_DIRECTIVE, void*);
 

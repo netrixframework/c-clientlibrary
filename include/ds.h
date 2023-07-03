@@ -16,7 +16,6 @@ typedef struct netrix_deque_elem {
 // Includes mutex to enable thread safe operations
 typedef struct netrix_deque {
     netrix_deque_elem* head;
-    netrix_deque_elem* tail;
     int size;
     pthread_mutex_t mutex;
 } netrix_deque;

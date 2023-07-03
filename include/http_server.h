@@ -16,7 +16,8 @@ typedef struct netrix_http_reply {
 netrix_http_reply* netrix_http_create_reply(void);
 void netrix_http_free_reply(netrix_http_reply*);
 
-typedef netrix_http_reply* (*netrix_http_handler)(struct mg_http_message*, void* fn_data);
+// TODO create a custom http_message type and send that to handler
+typedef netrix_http_reply* (*netrix_http_handler)(char* body, void* fn_data);
 
 typedef struct netrix_http_server {
     const char* listen_addr;
